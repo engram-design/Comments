@@ -210,12 +210,28 @@ Comments.Base = Base.extend({
     t: function(key) {
         return (Comments.translations.hasOwnProperty(key)) ? Comments.translations[key] : '';
     },
+	
+	makeUniqueID(prefix = 'ID') {
+		var d = new Date().getTime();
+
+		if( window.performance && typeof window.performance.now === "function" ) {
+			d += performance.now();
+		}
+
+		var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+			var r = (d + Math.random()*16)%16 | 0;
+			d = Math.floor(d/16);
+			return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+		});
+
+		return prefix + '_' + uuid;
+	},
 
     find: function(node, selector) {
         removeId = false;
 
         if (node.getAttribute('id') === null) {
-            node.setAttribute('id', 'ID_' + new Date().getTime());
+            node.setAttribute('id', this.makeUniqueID());
             removeId = true;
         }
 
@@ -556,6 +572,11 @@ Comments.ReplyForm = Comments.Base.extend({
 
         // Clear all inputs
         form.querySelector('form').reset();
+		
+		// make a new ID if we already have an ID
+		if (form.getAttribute('id') !== null) {
+            form.setAttribute('id', this.makeUniqueID(form.getAttribute('id')));
+        }
 
         // Set the value to be the id of comment we're replying to
         (form.querySelector('input[name="newParentId"]') || {}).value = this.comment.commentId;
@@ -633,6 +654,11 @@ Comments.EditForm = Comments.Base.extend({
         this.remove(form.querySelector('[name="fields[name]"]'));
         this.remove(form.querySelector('[name="fields[email]"]'));
         this.remove(form.querySelector('.cc-i-figure'));
+		
+		// make a new ID if we already have an ID
+		if (form.getAttribute('id') !== null) {
+            form.setAttribute('id', this.makeUniqueID(form.getAttribute('id')));
+        }
 
         // Clear and update
         form.querySelector('[name="fields[comment]"]').innerHTML = this.commentText;
